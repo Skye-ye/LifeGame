@@ -1,7 +1,7 @@
 #include "screen.h"
 
-const int GAME_WIDTH = 640;
-const int GAME_HEIGHT = 480;
+const int GAME_WIDTH = 960;
+const int GAME_HEIGHT = 540;
 
 bool isAlive(std::array<std::array<int, GAME_HEIGHT>, GAME_WIDTH>& game, const int x, const int y)
 {
@@ -36,15 +36,26 @@ bool isAlive(std::array<std::array<int, GAME_HEIGHT>, GAME_WIDTH>& game, const i
 }
 int main()
 {
+	// import random
+	//
+	std::random_device dev;
+	std::mt19937 rng(dev());
+	std::uniform_int_distribution<std::mt19937::result_type> dist(1, 100);
+
+	// Create screen
+	//
 	G screen;
 	std::array<std::array<int, GAME_HEIGHT>, GAME_WIDTH> display{};
 	std::array<std::array<int, GAME_HEIGHT>, GAME_WIDTH> swap{};
+
 	//Create random points
 	//
 	for (auto& row : display)
-		std::generate(row.begin(), row.end(), []()
-		{ return rand() % 10 == 0 ? 1 : 0; });
+		std::generate(row.begin(), row.end(), [&]()
+		{ return (dist(rng)) % 5 == 0 ? 1 : 0;});
 
+	// Start game loop
+	//
 	while (true)
 	{
 		// Check for alive points
@@ -60,7 +71,7 @@ int main()
 			{
 				if (swap[i][j])
 				{
-					screen.drawpixel(i, j);
+					screen.drawpixel(static_cast<float>(i), static_cast<float>(j));
 				}
 			}
 
@@ -71,7 +82,7 @@ int main()
 		//Display to screen
 		//
 		screen.update();
-		SDL_Delay(20);
+		SDL_Delay(10);
 		screen.input();
 		screen.clearpixels();
 	}

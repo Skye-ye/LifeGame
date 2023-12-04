@@ -1,5 +1,7 @@
 #include <SDL2/SDL.h>
 #include <array>
+#include <random>
+#include <cstdlib>
 #include <iostream>
 #include <ctime>
 #include <vector>
@@ -22,14 +24,14 @@ class G {
 	G()
 	{
 		SDL_Init(SDL_INIT_VIDEO);
-		SDL_CreateWindowAndRenderer(640*4, 480*4, SDL_WINDOW_ALLOW_HIGHDPI, &window, &renderer);
+		SDL_CreateWindowAndRenderer(1920, 1080, SDL_WINDOW_ALLOW_HIGHDPI, &window, &renderer);
 		SDL_RenderSetScale(renderer,4,4);
 	}
 
-	void drawpixel(double xm, double ym, uint8_t r = 255, uint8_t g = 255, uint8_t b = 255, uint8_t a = 255)
+	void drawpixel(float xm, float ym, uint8_t r = 255, uint8_t g = 255, uint8_t b = 255, uint8_t a = 255)
 	{
-		points.emplace_back(xm,ym);
-		colors.emplace_back(r,g,b,a);
+		points.emplace_back(SDL_FPoint{xm,ym});
+		colors.emplace_back(SDL_Color{r,g,b,a});
 	}
 	void clearpixels()
 	{
