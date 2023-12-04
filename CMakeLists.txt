@@ -9,4 +9,5 @@ include_directories(${SDL_H})
 set(SDL_LIB /opt/homebrew/Cellar/sdl2/2.28.5/lib/libSDL2-2.0.0.dylib)
 link_libraries(${SDL_LIB})
 
-add_executable(LifeGame main.cpp)
+add_executable(LifeGame main.cpp
+        screen.h)
