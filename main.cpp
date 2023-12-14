@@ -1,3 +1,6 @@
+#include <array>
+#include <random>
+#include <algorithm>
 #include "screen.h"
 
 const int GAME_WIDTH = 960;
@@ -44,7 +47,7 @@ int main()
 
 	// Create screen
 	//
-	G screen;
+	Screen screen;
 	std::array<std::array<int, GAME_HEIGHT>, GAME_WIDTH> display{};
 	std::array<std::array<int, GAME_HEIGHT>, GAME_WIDTH> swap{};
 
