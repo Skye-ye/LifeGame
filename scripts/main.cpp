@@ -46,8 +46,11 @@ Window gSettingWindow;
 // Pause textures
 Texture gPauseTexture;
 
-// Setting textures
-Texture gSettingTexture;
+// Prompt text textures
+Texture gPromptTextTexture;
+
+// Input text texture
+Texture gInputTextTexture;
 
 int main(int argc, char *argv[]) { // these two parameters are required for SDL
   // Start up SDL and create window
@@ -219,8 +222,8 @@ bool loadMedia() {
 	  success = false;
 	} else {
 	  // Render text
-	  SDL_Color textColor = {0, 0, 0};
-	  if (!gSettingTexture.loadFromRenderedText(gSettingWindow, "Setting", textColor)) {
+	  SDL_Color textColor = {0, 0, 0, 0xFF};
+	  if (!gPromptTextTexture.loadFromRenderedText(gSettingWindow, "Setting", textColor)) {
 		std::cout << "Failed to render text texture!" << std::endl;
 		success = false;
 	  }
@@ -234,13 +237,14 @@ int pause() {
   // Pause flag
   bool pauseDone = false;
   int pauseStatus = 0;
+  SDL_Event e;
+
 
   // Show pause window
   gPauseWindow.focus();
 
   // Handle events when paused
   while (!pauseDone) {
-	SDL_Event e;
 	while (SDL_PollEvent(&e) != 0) {
 	  // User prompts quit
 	  if (e.type == SDL_QUIT) {
@@ -308,13 +312,26 @@ int settings() {
   // Settings flag
   bool settingDone = false;
   int settingStatus = 0;
+  SDL_Event e;
+
+  // Set text color as black
+  SDL_Color textColor = {0, 0, 0, 0xFF};
+
+  // The current input text
+  std::string inputText = "Some Text";
+  gInputTextTexture.loadFromRenderedText(gSettingWindow, inputText, textColor);
 
   // Show setting window
   gSettingWindow.focus();
 
+  // Enable text input
+  SDL_StartTextInput();
+
   // Handle setting events
   while (!settingDone) {
-	SDL_Event e;
+	// The rerender text flag
+	bool renderText = false;
+
 	while (SDL_PollEvent(&e) != 0) {
 	  // User prompts quit
 	  if (e.type == SDL_QUIT) {
@@ -338,15 +355,70 @@ int settings() {
 		  case SDLK_r: settingDone = true;
 			break;
 
+			// Handle backspace
+		  case SDLK_BACKSPACE:
+			if (!inputText.empty()) {
+			  //lop off character
+			  inputText.pop_back();
+			  renderText = true;
+			}
+			break;
+
+			// Handle copy
+		  case SDLK_c:
+			if (SDL_GetModState() & KMOD_CTRL) {
+			  SDL_SetClipboardText(inputText.c_str());
+			}
+			break;
+
+			// Handle paste
+		  case SDLK_v:
+			if (SDL_GetModState() & KMOD_CTRL) {
+			  char *text = SDL_GetClipboardText();
+			  if (text != nullptr) {
+				inputText = text;
+				SDL_free(text);
+				renderText = true;
+			  }
+			}
+			break;
+
 		  default: break;
 		}
+
+		// Special text input event
+
+	  } else if (e.type == SDL_TEXTINPUT) {
+		//Not copy or pasting
+		if (!(SDL_GetModState() & KMOD_CTRL &&
+			(e.text.text[0] == 'c' || e.text.text[0] == 'C' ||
+				e.text.text[0] == 'v' || e.text.text[0] == 'V'))) {
+		  //Append character
+		  inputText += e.text.text;
+		  renderText = true;
+		}
+	  }
+	}
+	// Rerender text if needed
+	if (renderText) {
+	  //Text is not empty
+	  if (!inputText.empty()) {
+		//Render new text
+		gInputTextTexture.loadFromRenderedText(gSettingWindow, inputText, textColor);
+	  }
+		//Text is empty
+	  else {
+		//Render space texture
+		gInputTextTexture.loadFromRenderedText(gSettingWindow, " ", textColor);
 	  }
 	}
 	// Clear and render setting window
 	gSettingWindow.clear();
-	gSettingTexture.render(gSettingWindow,
-						   (gSettingWindow.getWidth() - gSettingTexture.getWidth()) / 2,
-						   (gSettingWindow.getHeight() - gSettingTexture.getHeight()) / 2);
+	gPromptTextTexture.render(gSettingWindow,
+							  (gSettingWindow.getWidth() - gPromptTextTexture.getWidth()) / 2, 0);
+	gInputTextTexture.render(gSettingWindow,
+							 (gSettingWindow.getWidth() - gInputTextTexture.getWidth()) / 2,
+							 (gSettingWindow.getHeight() + gPromptTextTexture.getHeight()) / 2);
 	gSettingWindow.render();
 
 	// Check all windows
@@ -361,6 +433,9 @@ int settings() {
 	  settingDone = true;
 	}
   }
+
+  // Disable text input
+  SDL_StopTextInput();
 
   // Hide setting window
   gSettingWindow.hide();

@@ -1,4 +1,9 @@
-CXX = g++
+ifeq ($(OS),Windows_NT)
+	CXX = path/to/windows-g++
+else
+	CXX = g++
+endif
+
 CXXFLAGS = -Wall -std=c++2b -O2 -I include/SDL2
 LDFLAGS = -L lib -lSDL2-2.0.0 -lSDL2_image-2.0.0 -lSDL2_ttf-2.0.0
 SCRIPTS = ./scripts

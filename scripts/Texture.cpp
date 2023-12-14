@@ -13,7 +13,7 @@ Texture::~Texture() {
   free();
 }
 
-bool Texture::loadFromFile(Window& window, const std::string &path) {
+bool Texture::loadFromFile(Window &window, const std::string &path) {
   // Get rid of preexisting texture
   free();
 
@@ -51,20 +51,20 @@ bool Texture::loadFromFile(Window& window, const std::string &path) {
 }
 
 #if defined(SDL_TTF_MAJOR_VERSION)
-bool Texture::loadFromRenderedText(Window& window, const std::string& textureText,
-									SDL_Color textColor) {
+bool Texture::loadFromRenderedText(Window &window, const std::string &textureText,
+								   SDL_Color textColor) {
   // Get rid of preexisting texture
   free();
 
   // Render text surface
-  SDL_Surface* textSurface =
+  SDL_Surface *textSurface =
 	  TTF_RenderText_Solid(gFont, textureText.c_str(), textColor);
   if (textSurface != nullptr) {
 	// Create texture from surface pixels
 	mTexture = SDL_CreateTextureFromSurface(window.mRenderer, textSurface);
 	if (mTexture == nullptr) {
-	  printf("Unable to create texture from rendered text! SDL Error: %s\n",
-			 SDL_GetError());
+	  std::cout << "Unable to create texture from rendered text! SDL Error: "
+				<< SDL_GetError() << std::endl;
 	} else {
 	  // Get image dimensions
 	  mWidth = textSurface->w;
@@ -74,8 +74,8 @@ bool Texture::loadFromRenderedText(Window& window, const std::string& textureTex
 	// Get rid of old surface
 	SDL_FreeSurface(textSurface);
   } else {
-	printf("Unable to render text surface! SDL_ttf Error: %s\n",
-		   TTF_GetError());
+	std::cout << "Unable to render text surface! SDL_ttf Error: "
+			  << TTF_GetError() << std::endl;
   }
 
   // Return success
@@ -108,7 +108,7 @@ void Texture::setAlpha(Uint8 alpha) {
   SDL_SetTextureAlphaMod(mTexture, alpha);
 }
 
-void Texture::render(Window& window, int x, int y, SDL_Rect *clip, double angle,
+void Texture::render(Window &window, int x, int y, SDL_Rect *clip, double angle,
 					 SDL_Point *center, SDL_RendererFlip flip) {
   // Set rendering space and render to screen
   SDL_Rect renderQuad = {x, y, mWidth, mHeight};

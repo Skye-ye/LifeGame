@@ -22,14 +22,15 @@ To run the program, simply run the following command in the terminal:
 ## Build
 To build the program yourself or change the source code, you can either use CMake or GNU Make which are both included in the repository.
 Make sure you have Make and CMake installed on your system.
-### CMake
+### On Mac/Linux:
+#### CMake
 Simply run the following commands in the terminal:
 ```bash
 cmake -S . -B build
 cmake --build build
 ```
 Check the [CMakeLists.txt](CMakeLists.txt) file for more information.
-### GNU Make
+#### GNU Make
 Simply run the following command in the terminal:
 ```bash
 make
@@ -47,3 +48,9 @@ and this for cleaning the executable file:
 make cleanexe
 ```
 Check the [Makefile](Makefile) file for more information.
+
+### On Windows:
+#### CMake
+Same as on Mac/Linux, but you may do some customization
+#### GNU Make
+You need to modify the path to your compiler in the [Makefile](Makefile) file. Then you can do the same as on Mac/Linux.
