@@ -1,8 +1,9 @@
-#include <SDL2/SDL.h>
+#ifndef SCREEN_H
+#define SCREEN_H
+#include <SDL.h>
 #include <ctime>
 #include <vector>
 
-#pragma once
 
 class Screen {
 
@@ -19,3 +20,5 @@ class Screen {
 	void update();
 	void input();
 };
+
+#endif
