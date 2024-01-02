@@ -3,60 +3,129 @@
 #include <algorithm>
 #include <iostream>
 #include "Window.h"
-#include "LTexture.h"
+#include "Texture.h"
+#include "PixelWindow.h"
 
 const int GAME_WIDTH = 720;
 const int GAME_HEIGHT = 480;
+
+int UPDATE_RATE = 20;
 
 // import random
 std::random_device dev;
 std::mt19937 rng(dev());
 std::uniform_int_distribution<std::mt19937::result_type> dist(1, 104);
 
+// Starts up SDL and creates window
 bool init();
 
-Window gWindow;
+// Loads media
+bool loadMedia();
 
+// Deal with pausing
+int pause();
+
+// Deal with settings
+int settings();
+
+// Frees media and shuts down SDL
 void close();
 
+// Check if a point is alive
 bool isAlive(std::array<std::array<int, GAME_HEIGHT>, GAME_WIDTH> &game, int x, int y);
+
+// Our custom window
+PixelWindow gWindow;
+
+// pause window
+Window gPauseWindow;
+
+// Scene textures
+Texture gSceneTexture;
 
 int main(int argc, char *argv[]) {
   // Start up SDL and create window
   if (!init()) {
-	printf("Failed to initialize!\n");
+	std::cout << "Failed to initialize!" << std::endl;
   } else {
-	// Initialize two arrays, one for the current state of the game and one for the next state
-	std::array<std::array<int, GAME_HEIGHT>, GAME_WIDTH> display{};
-	std::array<std::array<int, GAME_HEIGHT>, GAME_WIDTH> swap{};
+	// Load media
+	if (!loadMedia()) {
+	  std::cout << "Failed to load media!" << std::endl;
+	} else {
 
-	//Create random points
-	for (auto &row : display)
-	  std::generate(row.begin(), row.end(), []() { return (dist(rng)) % 8 == 0 ? 1 : 0; });
+	  // Initialize two arrays, one for the current state of the game and one for the next state
+	  std::array<std::array<int, GAME_HEIGHT>, GAME_WIDTH> display{};
+	  std::array<std::array<int, GAME_HEIGHT>, GAME_WIDTH> swap{};
 
-	// Start game loop
-	while (true) {
-	  // Check for alive points
-	  for (int i = 0; i < GAME_WIDTH; ++i)
-		for (int j = 0; j < GAME_HEIGHT; ++j)
-		  swap[i][j] = isAlive(display, i, j) ? 1 : 0;
+	  //Create random points
+	  for (auto &row : display)
+		std::generate(row.begin(), row.end(), []() { return (dist(rng)) % 8 == 0 ? 1 : 0; });
 
-	  //Draw
-	  for (int i = 0; i < GAME_WIDTH; ++i)
-		for (int j = 0; j < GAME_HEIGHT; ++j) {
-		  if (swap[i][j]) {
-			gWindow.drawpixel(static_cast<float>(i), static_cast<float>(j));
+	  // Main loop flag
+	  bool quit = false;
+
+	  // Event handler
+	  SDL_Event e;
+
+	  // Start game loop
+	  while (!quit) {
+
+		// Check for alive points
+		for (int i = 0; i < GAME_WIDTH; ++i)
+		  for (int j = 0; j < GAME_HEIGHT; ++j)
+			swap[i][j] = isAlive(display, i, j) ? 1 : 0;
+
+		//Draw
+		for (int i = 0; i < GAME_WIDTH; ++i)
+		  for (int j = 0; j < GAME_HEIGHT; ++j)
+			if (swap[i][j])
+			  gWindow.drawpixel(static_cast<float>(i), static_cast<float>(j));
+
+		// Swap buffers
+		std::copy(swap.begin(), swap.end(), display.begin());
+
+		//Display to screen
+		gWindow.render();
+
+		// Handle events on queue
+		while (SDL_PollEvent(&e) != 0) {
+		  // User requests quit
+		  if (e.type == SDL_QUIT) {
+			quit = true;
+		  }
+
+		  // Handle window events
+		  gWindow.handleEvent(e);
+
+		  // Handle key presses
+		  if (e.type == SDL_KEYDOWN) {
+			switch (e.key.keysym.sym) {
+			  // Pause the game
+			  case SDLK_p:
+				if (pause() == 1) {
+				  quit = true;
+				}
+				break;
+
+				// Speed up the game
+			  case SDLK_UP: UPDATE_RATE -= 5;
+				if (UPDATE_RATE < 5) UPDATE_RATE = 5;
+				gWindow.setRefreshSpeed(UPDATE_RATE);
+				break;
+
+				// Slow down the game
+			  case SDLK_DOWN: UPDATE_RATE += 5;
+				if (UPDATE_RATE > 100) UPDATE_RATE = 100;
+				gWindow.setRefreshSpeed(UPDATE_RATE);
+				break;
+
+			  default: break;
+			}
 		  }
 		}
-
-	  // Swap buffers
-	  std::copy(swap.begin(), swap.end(), display.begin());
-
-	  //Display to screen
-	  gWindow.update();
-	  SDL_Delay(20);
-	  gWindow.input();
-	  gWindow.clearpixels();
+		SDL_Delay(UPDATE_RATE);
+		gWindow.clearpixels();
+	  }
 	}
   }
   close();
@@ -69,14 +138,13 @@ bool init() {
 
   // Initialize SDL
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-	printf("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
+	std::cout << "SDL could not initialize! SDL Error: \n" << SDL_GetError();
 	success = false;
   } else {
 	// Set texture filtering to linear
 	if (!SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1")) {
-	  printf("Warning: Linear texture filtering not enabled!");
+	  std::cout << "Warning: Linear texture filtering not enabled!";
 	}
-
 	// Initialize PNG loading
 	int imgFlags = IMG_INIT_PNG;
 	if (!(IMG_Init(imgFlags) & imgFlags)) {
@@ -100,10 +168,88 @@ bool init() {
   return success;
 }
 
-void close() {
-  // Destroy windows
-  gWindow.free();
+bool loadMedia() {
+  // Loading success flag
+  bool success = true;
 
+  // Load scene texture
+  if (!gSceneTexture.loadFromFile(gWindow, "resources/images/pause.png")) {
+	std::cout << "Failed to load window texture!\n";
+	success = false;
+  }
+
+  return success;
+}
+
+int pause() {
+  bool paused = true;
+
+  // Handle events when paused
+  while (paused) {
+	SDL_Event e;
+	while (SDL_PollEvent(&e) != 0) {
+	  // User prompts quit
+	  if (e.type == SDL_QUIT) {
+		return 1;
+	  }
+
+	  // Handle window events
+	  gWindow.handleEvent(e);
+
+	  // Handle key presses
+	  if (e.type == SDL_KEYDOWN) {
+		switch (e.key.keysym.sym) {
+		  // User prompts quit
+		  case SDLK_q: return 1;
+
+			// User prompts menu
+		  case SDLK_m: if (settings() == 1) return 1;
+			break;
+
+			// Resume game
+		  case SDLK_r: paused = false;
+			break;
+
+		  default: break;
+		}
+	  }
+	}
+  }
+
+  // Return to game
+  return 0;
+}
+
+int settings() {
+  bool done = false;
+  while (!done) {
+	SDL_Event e;
+	while (SDL_PollEvent(&e) != 0) {
+	  // User prompts quit
+	  if (e.type == SDL_QUIT) {
+		return 1;
+	  }
+
+	  // Handle window events
+	  gWindow.handleEvent(e);
+
+	  // Handle user input
+	  if (e.type == SDL_KEYDOWN) {
+		switch (e.key.keysym.sym) {
+		  // Return to pause menu
+		  case SDLK_RETURN: done = true;
+			break;
+		  default: break;
+		}
+	  }
+	}
+  }
+
+  // Return to pause menu
+  return 0;
+}
+
+void close() {
   // Quit SDL subsystems
   TTF_Quit();
   IMG_Quit();

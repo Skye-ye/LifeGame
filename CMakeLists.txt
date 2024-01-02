@@ -8,7 +8,9 @@ add_executable(LifeGame scripts/main.cpp
         scripts/Texture.h
         scripts/Texture.cpp
         scripts/Window.h
-        scripts/Window.cpp)
+        scripts/Window.cpp
+        scripts/PixelWindow.h
+        scripts/PixelWindow.cpp)
 
 set(SDL2_PATH SDL2)
 find_package(SDL2 REQUIRED)

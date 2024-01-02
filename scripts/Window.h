@@ -1,32 +1,34 @@
 #ifndef Window_H
 #define Window_H
+
 #include <SDL.h>
-#include <SDL_image.h>
-#include <SDL_ttf.h>
 #include <vector>
 
 class Window {
+
+  friend class Texture;
 
  public:
   // Initializes internals
   Window();
 
-  // Creates window
-  bool init(int screenWidth, int screenHeight);
+  // Deallocates internals
+  ~Window();
 
-  // Handles window events
-  void handleEvent(SDL_Event& e);
+  // Creates window
+  virtual bool init(int screenWidth, int screenHeight);
+
+  // Reset window title
+  virtual void resetTitle();
+
+  // Shows windows contents
+  virtual void render();
 
   // Focuses on window
   void focus();
 
-  // Shows windows contents
-  void render();
-
-  void drawpixel(float xm, float ym, uint8_t r = 255, uint8_t g = 255, uint8_t b = 255, uint8_t a = 255);
-  void clearpixels();
-  void update();
-  void input();
+  // Handles window events
+  void handleEvent(SDL_Event &e);
 
   // Deallocates internals
   void free();
@@ -42,25 +44,23 @@ class Window {
   [[nodiscard]] bool isShown() const;
 
  private:
-// SDL_bool done;
   std::vector<SDL_FPoint> points;
   std::vector<SDL_Color> colors;
-  SDL_Event event{};
-  // Window data
-  SDL_Window* mWindow;
-  SDL_Renderer* mRenderer;
-  int mWindowID;
 
-  // Window dimensions
-  int mWidth;
-  int mHeight;
-
-  // Window focus
+  bool mFullScreen;
+ protected:
+// Window data
+  SDL_Window *mWindow;
+// Window focus
   bool mMouseFocus;
   bool mKeyboardFocus;
-  bool mFullScreen;
-  bool mMinimized;
+// Window dimensions
+  int mWidth;
+  int mHeight;
+  SDL_Renderer *mRenderer;
+  uint32_t mWindowID;
   bool mShown;
+  bool mMinimized;
 };
 
 #endif

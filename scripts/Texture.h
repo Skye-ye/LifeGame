@@ -1,6 +1,13 @@
+#ifndef Texture_H
+#define Texture_H
+
 #include <SDL.h>
 #include <SDL_image.h>
+#include <SDL_ttf.h>
 #include <iostream>
+#include "Window.h"
+
+class Window;
 
 class Texture {
  public:
@@ -11,11 +18,11 @@ class Texture {
   ~Texture();
 
   // Loads image at specified path
-  bool loadFromFile(const std::string& path);
+  bool loadFromFile(Window& window, const std::string& path);
 
 #if defined(SDL_TTF_MAJOR_VERSION)
   // Creates image from font string
-  bool loadFromRenderedText(std::string textureText, SDL_Color textColor);
+  bool loadFromRenderedText(Window& window, const std::string& textureText, SDL_Color textColor);
 #endif
 
   // Deallocates texture
@@ -31,7 +38,7 @@ class Texture {
   void setAlpha(Uint8 alpha);
 
   // Renders texture at given point
-  void render(int x, int y, SDL_Rect *clip = nullptr, double angle = 0.0,
+  void render(Window& window, int x, int y, SDL_Rect *clip = nullptr, double angle = 0.0,
 			  SDL_Point *center = nullptr, SDL_RendererFlip flip = SDL_FLIP_NONE);
 
   // Gets image dimensions
@@ -46,3 +53,5 @@ class Texture {
   int mWidth;
   int mHeight;
 };
+
+#endif
