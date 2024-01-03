@@ -2,25 +2,14 @@ cmake_minimum_required(VERSION 3.26)
 project(LifeGame)
 
 set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${project_SOURCE_DIR}/cmake_modules")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
-add_executable(LifeGame scripts/main.cpp
-        scripts/Texture.h
-        scripts/Texture.cpp
-        scripts/Window.h
-        scripts/Window.cpp
-        scripts/PixelWindow.h
-        scripts/PixelWindow.cpp)
+include_directories(include/SDL2)
+link_directories(lib)
 
-set(SDL2_PATH SDL2)
-find_package(SDL2 REQUIRED)
-find_package(SDL2_image REQUIRED)
-find_package(SDL2_ttf REQUIRED)
+file(GLOB_RECURSE LifeGame_SOURCES "scripts/*.cpp")
+file(GLOB_RECURSE LifeGame_HEADERS "scripts/*.h")
 
-include_directories(${SDL2_INCLUDE_DIR}
-        ${SDL2_IMAGE_INCLUDE_DIR}
-        ${SDL2_TTF_INCLUDE_DIR})
+add_executable(${PROJECT_NAME} ${LifeGame_SOURCES} ${LifeGame_HEADERS})
 
-target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARY}
-        ${SDL2_IMAGE_LIBRARIES}
-        ${SDL2_TTF_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} SDL2-2.0.0 SDL2_image-2.0.0 SDL2_ttf-2.0.0)

@@ -1,23 +1,8 @@
 ## Clions Project
 cmake-build-debug/*
-!cmake-build-debug/SDL2.dll
+
 # cmake/
 .idea/
 
-
-
-## CMake
-CMakeLists.txt.user
-CMakeCache.txt
-CMakeFiles
-CMakeScripts
-Testing
-cmake_install.cmake
-install_manifest.txt
-compile_commands.json
-CTestTestfile.cmake
-_deps
-
-
-
+# object files
 *.o

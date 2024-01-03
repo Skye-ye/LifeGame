@@ -261,19 +261,25 @@ int pause() {
 
   // Hide pause window and return to game window
   gPauseWindow.hide();
+  gWindow.focus();
 
   // Return to game
   return status;
 }
 
 int settings() {
+  // Settings flag
   bool done = false;
+  int status = 0;
+
+  // Handle setting events
   while (!done) {
 	SDL_Event e;
 	while (SDL_PollEvent(&e) != 0) {
 	  // User prompts quit
 	  if (e.type == SDL_QUIT) {
-		return 1;
+		status = 1;
+		done = true;
 	  }
 
 	  // Handle window events
@@ -292,7 +298,7 @@ int settings() {
   }
 
   // Return to pause menu
-  return 0;
+  return status;
 }
 
 void close() {
