@@ -43,7 +43,7 @@ Window gPauseWindow;
 // Scene textures
 Texture gSceneTexture;
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) { // these two parameters are required for SDL
   // Start up SDL and create window
   if (!init()) {
 	std::cout << "Failed to initialize!" << std::endl;
@@ -100,7 +100,11 @@ int main(int argc, char *argv[]) {
 		  // Handle key presses
 		  if (e.type == SDL_KEYDOWN) {
 			switch (e.key.keysym.sym) {
-			  // Pause the game
+			  // User prompts quit
+			  case SDLK_q: quit = true;
+				break;
+
+				// Pause the game
 			  case SDLK_p:
 				if (pause() == 1) {
 				  quit = true;
@@ -123,11 +127,17 @@ int main(int argc, char *argv[]) {
 			}
 		  }
 		}
+
+		// Wait a bit
 		SDL_Delay(UPDATE_RATE);
+
+		// Clear pixels
 		gWindow.clearpixels();
 	  }
 	}
   }
+
+  // Free resources and close SDL
   close();
   return 0;
 }
@@ -163,6 +173,15 @@ bool init() {
 	  std::cout << "Window could not be created! SDL Error: \n" << SDL_GetError();
 	  success = false;
 	}
+
+	// Initialize pause window
+	if (!gPauseWindow.init(GAME_WIDTH, GAME_HEIGHT)) {
+	  std::cout << "Window could not be created! SDL Error: \n" << SDL_GetError();
+	  success = false;
+	} else {
+	  // Hide pause window to focus on game window
+	  gPauseWindow.hide();
+	}
   }
 
   return success;
@@ -173,7 +192,7 @@ bool loadMedia() {
   bool success = true;
 
   // Load scene texture
-  if (!gSceneTexture.loadFromFile(gWindow, "resources/images/pause.png")) {
+  if (!gSceneTexture.loadFromFile(gPauseWindow, "resources/images/pause.png")) {
 	std::cout << "Failed to load window texture!\n";
 	success = false;
   }
@@ -182,7 +201,12 @@ bool loadMedia() {
 }
 
 int pause() {
+  // Pause flag
   bool paused = true;
+  int status = 0;
+
+  // Show pause window
+  gPauseWindow.focus();
 
   // Handle events when paused
   while (paused) {
@@ -190,20 +214,24 @@ int pause() {
 	while (SDL_PollEvent(&e) != 0) {
 	  // User prompts quit
 	  if (e.type == SDL_QUIT) {
-		return 1;
+		status = 1;
+		paused = false;
 	  }
 
 	  // Handle window events
+	  gPauseWindow.handleEvent(e);
 	  gWindow.handleEvent(e);
 
 	  // Handle key presses
 	  if (e.type == SDL_KEYDOWN) {
 		switch (e.key.keysym.sym) {
 		  // User prompts quit
-		  case SDLK_q: return 1;
+		  case SDLK_q: status = 1;
+			paused = false;
+			break;
 
 			// User prompts menu
-		  case SDLK_m: if (settings() == 1) return 1;
+		  case SDLK_s: if (settings() == 1) status = 1;
 			break;
 
 			// Resume game
@@ -214,10 +242,28 @@ int pause() {
 		}
 	  }
 	}
+	gPauseWindow.clear();
+	gSceneTexture.render(gPauseWindow, 0, 0);
+	gPauseWindow.render();
+
+	// Check all windows
+	bool allWindowsClosed = true;
+	if (gWindow.isShown() || gPauseWindow.isShown()) {
+	  allWindowsClosed = false;
+	}
+
+	// If all windows are closed, quit
+	if (allWindowsClosed) {
+	  status = 1;
+	  paused = false;
+	}
   }
 
+  // Hide pause window and return to game window
+  gPauseWindow.hide();
+
   // Return to game
-  return 0;
+  return status;
 }
 
 int settings() {

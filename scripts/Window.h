@@ -24,6 +24,12 @@ class Window {
   // Shows windows contents
   virtual void render();
 
+  // clear window contents
+  void clear();
+
+  // Hide window
+  void hide();
+
   // Focuses on window
   void focus();
 

@@ -1,4 +1,5 @@
 #include "Texture.h"
+#include <iostream>
 
 TTF_Font *gFont = nullptr;
 

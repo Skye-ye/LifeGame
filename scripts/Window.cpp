@@ -66,69 +66,57 @@ void Window::handleEvent(SDL_Event &e) {
 
 	switch (e.window.event) {
 	  // Window appeared
-	  case SDL_WINDOWEVENT_SHOWN:
-		mShown = true;
+	  case SDL_WINDOWEVENT_SHOWN: mShown = true;
 		break;
 
 		// Window disappeared
-	  case SDL_WINDOWEVENT_HIDDEN:
-		mShown = false;
+	  case SDL_WINDOWEVENT_HIDDEN: mShown = false;
 		break;
 
 		// Get new dimensions and repaint
-	  case SDL_WINDOWEVENT_SIZE_CHANGED:
-		mWidth = e.window.data1;
+	  case SDL_WINDOWEVENT_SIZE_CHANGED: mWidth = e.window.data1;
 		mHeight = e.window.data2;
 		SDL_RenderPresent(mRenderer);
 		break;
 
 		// Repaint on expose
-	  case SDL_WINDOWEVENT_EXPOSED:
-		SDL_RenderPresent(mRenderer);
+	  case SDL_WINDOWEVENT_EXPOSED: SDL_RenderPresent(mRenderer);
 		break;
 
 		// Mouse enter
-	  case SDL_WINDOWEVENT_ENTER:
-		mMouseFocus = true;
+	  case SDL_WINDOWEVENT_ENTER: mMouseFocus = true;
 		updateCaption = true;
 		break;
 
 		// Mouse exit
-	  case SDL_WINDOWEVENT_LEAVE:
-		mMouseFocus = false;
+	  case SDL_WINDOWEVENT_LEAVE: mMouseFocus = false;
 		updateCaption = true;
 		break;
 
 		// Keyboard focus gained
-	  case SDL_WINDOWEVENT_FOCUS_GAINED:
-		mKeyboardFocus = true;
+	  case SDL_WINDOWEVENT_FOCUS_GAINED: mKeyboardFocus = true;
 		updateCaption = true;
 		break;
 
 		// Keyboard focus lost
-	  case SDL_WINDOWEVENT_FOCUS_LOST:
-		mKeyboardFocus = false;
+	  case SDL_WINDOWEVENT_FOCUS_LOST: mKeyboardFocus = false;
 		updateCaption = true;
 		break;
 
 		// Window minimized
-	  case SDL_WINDOWEVENT_MINIMIZED:
-		mMinimized = true;
+	  case SDL_WINDOWEVENT_MINIMIZED: mMinimized = true;
 		break;
 
 		// Window maximized
-	  case SDL_WINDOWEVENT_MAXIMIZED:
-		mMinimized = false;
+	  case SDL_WINDOWEVENT_MAXIMIZED: mMinimized = false;
 		break;
 
 		// Window restored
-	  case SDL_WINDOWEVENT_RESTORED:
-		mMinimized = false;
+	  case SDL_WINDOWEVENT_RESTORED: mMinimized = false;
 		break;
 
 		// Hide on close
-	  case SDL_WINDOWEVENT_CLOSE:
-		SDL_HideWindow(mWindow);
+	  case SDL_WINDOWEVENT_CLOSE: SDL_HideWindow(mWindow);
 		break;
 	}
 
@@ -169,13 +157,22 @@ void Window::focus() {
 
 void Window::render() {
   if (!mMinimized) {
-	// Clear screen
-	SDL_SetRenderDrawColor(mRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
-	SDL_RenderClear(mRenderer);
-
 	// Update screen
 	SDL_RenderPresent(mRenderer);
   }
+}
+
+void Window::clear() {
+  // Clear screen
+  if (!mMinimized) {
+	SDL_SetRenderDrawColor(mRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
+	SDL_RenderClear(mRenderer);
+  }
+}
+
+void Window::hide() {
+  SDL_HideWindow(mWindow);
+  mShown = false;
 }
 
 void Window::free() {
