@@ -1,7 +1,7 @@
 #ifndef Window_H
 #define Window_H
 
-#include <SDL.h>
+#include "GlobalData.h"
 #include <vector>
 
 class Window {
@@ -9,19 +9,22 @@ class Window {
   friend class Texture;
 
  public:
-  // Initializes internals
+  // Initialize internals
   Window();
 
-  // Deallocates internals
+  // Deallocate internals
   ~Window();
 
-  // Creates window
+  // Create window
   virtual bool init(int screenWidth, int screenHeight);
+
+  // Destroy window
+  void free();
 
   // Reset window title
   virtual void resetTitle();
 
-  // Shows windows contents
+  // Show windows contents
   virtual void render();
 
   // clear window contents
@@ -30,14 +33,11 @@ class Window {
   // Hide window
   void hide();
 
-  // Focuses on window
+  // Focus on window
   void focus();
 
-  // Handles window events
+  // Handle window events
   void handleEvent(SDL_Event &e);
-
-  // Deallocates internals
-  void free();
 
   // Window dimensions
   [[nodiscard]] int getWidth() const;
@@ -49,11 +49,6 @@ class Window {
   [[nodiscard]] bool isMinimized() const;
   [[nodiscard]] bool isShown() const;
 
- private:
-  std::vector<SDL_FPoint> points;
-  std::vector<SDL_Color> colors;
-
-  bool mFullScreen;
  protected:
 // Window data
   SDL_Window *mWindow;
@@ -67,6 +62,7 @@ class Window {
   uint32_t mWindowID;
   bool mShown;
   bool mMinimized;
+  bool mFullScreen;
 };
 
 #endif

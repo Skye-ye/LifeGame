@@ -1,8 +1,6 @@
 #include "Texture.h"
 #include <iostream>
 
-TTF_Font *gFont = nullptr;
-
 Texture::Texture() {
   // Initialize
   mTexture = nullptr;

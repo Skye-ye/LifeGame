@@ -58,6 +58,20 @@ bool Window::init(int screenWidth, int screenHeight) {
   return mWindow != nullptr && mRenderer != nullptr;
 }
 
+void Window::free() {
+  if (mRenderer != nullptr) {
+	SDL_DestroyRenderer(mRenderer);
+  }
+  if (mWindow != nullptr) {
+	SDL_DestroyWindow(mWindow);
+  }
+
+  mMouseFocus = false;
+  mKeyboardFocus = false;
+  mWidth = 0;
+  mHeight = 0;
+}
+
 void Window::handleEvent(SDL_Event &e) {
   // If an event was detected for this window
   if (e.type == SDL_WINDOWEVENT && e.window.windowID == mWindowID) {
@@ -173,20 +187,6 @@ void Window::clear() {
 void Window::hide() {
   SDL_HideWindow(mWindow);
   mShown = false;
-}
-
-void Window::free() {
-  if (mRenderer != nullptr) {
-	SDL_DestroyRenderer(mRenderer);
-  }
-  if (mWindow != nullptr) {
-	SDL_DestroyWindow(mWindow);
-  }
-
-  mMouseFocus = false;
-  mKeyboardFocus = false;
-  mWidth = 0;
-  mHeight = 0;
 }
 
 int Window::getWidth() const { return mWidth; }

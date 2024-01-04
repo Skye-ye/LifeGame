@@ -2,14 +2,14 @@
 #include <random>
 #include <algorithm>
 #include <iostream>
+#include "GlobalData.h"
 #include "Window.h"
 #include "Texture.h"
 #include "PixelWindow.h"
 
-const int GAME_WIDTH = 720;
-const int GAME_HEIGHT = 480;
-
 int UPDATE_RATE = 20;
+
+TTF_Font *gFont;
 
 // import random
 std::random_device dev;
@@ -37,11 +37,17 @@ bool isAlive(std::array<std::array<int, GAME_HEIGHT>, GAME_WIDTH> &game, int x, 
 // Our custom window
 PixelWindow gWindow;
 
-// pause window
+// Pause window
 Window gPauseWindow;
 
-// Scene textures
-Texture gSceneTexture;
+// Setting window
+Window gSettingWindow;
+
+// Pause textures
+Texture gPauseTexture;
+
+// Setting textures
+Texture gSettingTexture;
 
 int main(int argc, char *argv[]) { // these two parameters are required for SDL
   // Start up SDL and create window
@@ -59,7 +65,8 @@ int main(int argc, char *argv[]) { // these two parameters are required for SDL
 
 	  //Create random points
 	  for (auto &row : display)
-		std::generate(row.begin(), row.end(), []() { return (dist(rng)) % 8 == 0 ? 1 : 0; });
+		std::generate(row.begin(), row.end(),
+					  []() { return (dist(rng)) % 8 == 0 ? 1 : 0; });
 
 	  // Main loop flag
 	  bool quit = false;
@@ -175,12 +182,21 @@ bool init() {
 	}
 
 	// Initialize pause window
-	if (!gPauseWindow.init(GAME_WIDTH, GAME_HEIGHT)) {
+	if (!gPauseWindow.init(GAME_WIDTH / 2, GAME_HEIGHT / 2)) {
 	  std::cout << "Window could not be created! SDL Error: \n" << SDL_GetError();
 	  success = false;
 	} else {
 	  // Hide pause window to focus on game window
 	  gPauseWindow.hide();
+	}
+
+	// Initialize setting window
+	if (!gSettingWindow.init(GAME_WIDTH / 2, GAME_HEIGHT / 2)) {
+	  std::cout << "Window could not be created! SDL Error: \n" << SDL_GetError();
+	  success = false;
+	} else {
+	  // Hide setting window to focus on game window
+	  gSettingWindow.hide();
 	}
   }
 
@@ -192,9 +208,23 @@ bool loadMedia() {
   bool success = true;
 
   // Load scene texture
-  if (!gSceneTexture.loadFromFile(gPauseWindow, "resources/images/pause.png")) {
-	std::cout << "Failed to load window texture!\n";
+  if (!gPauseTexture.loadFromFile(gPauseWindow, "resources/images/pause.png")) {
+	std::cout << "Failed to load window texture!" << std::endl;
 	success = false;
+  } else {
+	// Open the font
+	gFont = TTF_OpenFont("resources/fonts/Arial Unicode.ttf", 28);
+	if (gFont == nullptr) {
+	  std::cout << "Failed to load font! SDL_ttf Error: " << TTF_GetError() << std::endl;
+	  success = false;
+	} else {
+	  // Render text
+	  SDL_Color textColor = {0, 0, 0};
+	  if (!gSettingTexture.loadFromRenderedText(gSettingWindow, "Setting", textColor)) {
+		std::cout << "Failed to render text texture!" << std::endl;
+		success = false;
+	  }
+	}
   }
 
   return success;
@@ -202,20 +232,20 @@ bool loadMedia() {
 
 int pause() {
   // Pause flag
-  bool paused = true;
-  int status = 0;
+  bool pauseDone = false;
+  int pauseStatus = 0;
 
   // Show pause window
   gPauseWindow.focus();
 
   // Handle events when paused
-  while (paused) {
+  while (!pauseDone) {
 	SDL_Event e;
 	while (SDL_PollEvent(&e) != 0) {
 	  // User prompts quit
 	  if (e.type == SDL_QUIT) {
-		status = 1;
-		paused = false;
+		pauseStatus = 1;
+		pauseDone = true;
 	  }
 
 	  // Handle window events
@@ -226,24 +256,31 @@ int pause() {
 	  if (e.type == SDL_KEYDOWN) {
 		switch (e.key.keysym.sym) {
 		  // User prompts quit
-		  case SDLK_q: status = 1;
-			paused = false;
+		  case SDLK_q: pauseStatus = 1;
+			pauseDone = true;
 			break;
 
 			// User prompts menu
-		  case SDLK_s: if (settings() == 1) status = 1;
+		  case SDLK_s: gPauseWindow.hide();
+			if (settings() == 1) {
+			  pauseStatus = 1;
+			  pauseDone = true;
+			} else {
+			  gPauseWindow.focus();
+			}
 			break;
 
 			// Resume game
-		  case SDLK_r: paused = false;
+		  case SDLK_r: pauseDone = true;
 			break;
 
 		  default: break;
 		}
 	  }
 	}
+	// Clear and render pause window
 	gPauseWindow.clear();
-	gSceneTexture.render(gPauseWindow, 0, 0);
+	gPauseTexture.render(gPauseWindow, 0, 0);
 	gPauseWindow.render();
 
 	// Check all windows
@@ -254,8 +291,8 @@ int pause() {
 
 	// If all windows are closed, quit
 	if (allWindowsClosed) {
-	  status = 1;
-	  paused = false;
+	  pauseStatus = 1;
+	  pauseDone = true;
 	}
   }
 
@@ -264,44 +301,78 @@ int pause() {
   gWindow.focus();
 
   // Return to game
-  return status;
+  return pauseStatus;
 }
 
 int settings() {
   // Settings flag
-  bool done = false;
-  int status = 0;
+  bool settingDone = false;
+  int settingStatus = 0;
+
+  // Show setting window
+  gSettingWindow.focus();
 
   // Handle setting events
-  while (!done) {
+  while (!settingDone) {
 	SDL_Event e;
 	while (SDL_PollEvent(&e) != 0) {
 	  // User prompts quit
 	  if (e.type == SDL_QUIT) {
-		status = 1;
-		done = true;
+		settingStatus = 1;
+		settingDone = true;
 	  }
 
 	  // Handle window events
 	  gWindow.handleEvent(e);
+	  gSettingWindow.handleEvent(e);
 
 	  // Handle user input
 	  if (e.type == SDL_KEYDOWN) {
 		switch (e.key.keysym.sym) {
-		  // Return to pause menu
-		  case SDLK_RETURN: done = true;
+		  // User prompts quit
+		  case SDLK_q: settingStatus = 1;
+			settingDone = true;
 			break;
+
+			// Return to pause menu
+		  case SDLK_r: settingDone = true;
+			break;
+
 		  default: break;
 		}
 	  }
 	}
+	// Clear and render setting window
+	gSettingWindow.clear();
+	gSettingTexture.render(gSettingWindow,
+						   (gSettingWindow.getWidth() - gSettingTexture.getWidth()) / 2,
+						   (gSettingWindow.getHeight() - gSettingTexture.getHeight()) / 2);
+	gSettingWindow.render();
+
+	// Check all windows
+	bool allWindowsClosed = true;
+	if (gWindow.isShown() || gSettingWindow.isShown()) {
+	  allWindowsClosed = false;
+	}
+
+	// If all windows are closed, quit
+	if (allWindowsClosed) {
+	  settingStatus = 1;
+	  settingDone = true;
+	}
   }
 
-  // Return to pause menu
-  return status;
+  // Hide setting window
+  gSettingWindow.hide();
+
+  // Return status to pause
+  return settingStatus;
 }
 
 void close() {
+  // Free global font
+  TTF_CloseFont(gFont);
+
   // Quit SDL subsystems
   TTF_Quit();
   IMG_Quit();

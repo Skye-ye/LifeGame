@@ -10,12 +10,12 @@ bool PixelWindow::init(int screenWidth, int screenHeight) {
   // Create window
   mWindow = SDL_CreateWindow(
 	  "Life Game", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-	  screenWidth * 2, screenHeight * 2, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
+	  screenWidth, screenHeight, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
   if (mWindow != nullptr) {
 	mMouseFocus = true;
 	mKeyboardFocus = true;
-	mWidth = screenWidth * 2;
-	mHeight = screenHeight * 2;
+	mWidth = screenWidth;
+	mHeight = screenHeight;
 
 	// Create mRenderer for window
 	mRenderer = SDL_CreateRenderer(

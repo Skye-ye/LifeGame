@@ -1,12 +1,8 @@
-#ifndef Texture_H
-#define Texture_H
+#ifndef LIFEGAME_SCRIPTS_Texture_H
+#define LIFEGAME_SCRIPTS_Texture_H
 
-#include <SDL.h>
-#include <SDL_image.h>
-#include <SDL_ttf.h>
+#include "GlobalData.h"
 #include "Window.h"
-
-class Window;
 
 class Texture {
  public:
@@ -53,4 +49,4 @@ class Texture {
   int mHeight;
 };
 
-#endif
+#endif //LIFEGAME_SCRIPTS_Texture_H

@@ -5,7 +5,7 @@
 
 // Inherit from Window class to create a window with pixel drawing capability
 class PixelWindow : public Window {
-  friend class Texture;
+
 
  public:
   PixelWindow();
@@ -26,6 +26,7 @@ class PixelWindow : public Window {
 
   // Calculate refresh speed
   void setRefreshSpeed(int refreshRate);
+
  private:
   // Pixel data
   std::vector<SDL_FPoint> points;

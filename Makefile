@@ -1,6 +1,6 @@
 CXX = g++
-CXXFLAGS = -Wall -std=c++2b -O2 -I SDL2/include/SDL2
-LDFLAGS = -L SDL2/lib -lSDL2-2.0.0 -lSDL2_image-2.0.0 -lSDL2_ttf-2.0.0
+CXXFLAGS = -Wall -std=c++2b -O2 -I include/SDL2
+LDFLAGS = -L lib -lSDL2-2.0.0 -lSDL2_image-2.0.0 -lSDL2_ttf-2.0.0
 SCRIPTS = ./scripts
 SRCS = $(wildcard $(SCRIPTS)/*.cpp)
 OBJS = $(SRCS:$(SCRIPTS)/%.cpp=%.o)

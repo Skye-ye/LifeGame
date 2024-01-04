@@ -11,18 +11,24 @@ This is a simple implementation of Conway's Game of Life in Python. It is a zero
     - All other live cells die in the next generation. Similarly, all other dead cells stay dead.
 ## Usage
 To run the program, simply run the following command in the terminal:
-### in Mac/Linux:
+### On Mac/Linux:
 ```bash
 ./LifeGame
 ```
-### in Windows:
+### On Windows:
 ```bash
 ./LifeGame.exe
 ```
 ## Build
 To build the program yourself or change the source code, you can either use CMake or GNU Make which are both included in the repository.
+Make sure you have Make and CMake installed on your system.
 ### CMake
-Check the [CMakeLists.txt](CMakeLists.txt) file and cmake_modules folder for more information.
+Simply run the following commands in the terminal:
+```bash
+cmake -S . -B build
+cmake --build build
+```
+Check the [CMakeLists.txt](CMakeLists.txt) file for more information.
 ### GNU Make
 Simply run the following command in the terminal:
 ```bash
