@@ -7,8 +7,14 @@
 #include "Texture.h"
 #include "PixelWindow.h"
 
+//Initial update rate
 int UPDATE_RATE = 20;
 
+// Initial conditions
+int LOWER_BOUND = 2;
+int UPPER_BOUND = 3;
+
+// Declare global font
 TTF_Font *gFont;
 
 // import random
@@ -22,6 +28,9 @@ bool init();
 // Loads media
 bool loadMedia();
 
+// Generate random pixels
+void generateRandomPixels(std::array<std::array<int, GAME_HEIGHT>, GAME_WIDTH> &game);
+
 // Deal with pausing
 int pause();
 
@@ -33,6 +42,10 @@ void close();
 
 // Check if a point is alive
 bool isAlive(std::array<std::array<int, GAME_HEIGHT>, GAME_WIDTH> &game, int x, int y);
+
+// Initialize two arrays, one for the current state of the game and one for the next state
+std::array<std::array<int, GAME_HEIGHT>, GAME_WIDTH> display{};
+std::array<std::array<int, GAME_HEIGHT>, GAME_WIDTH> swap{};
 
 // Our custom window
 PixelWindow gWindow;
@@ -46,30 +59,31 @@ Window gSettingWindow;
 // Pause textures
 Texture gPauseTexture;
 
-// Prompt text textures
-Texture gPromptTextTexture;
+// Setting header textures
+Texture gSettingHeaderTextTexture;
+
+// Input conditions texture
+Texture gFirstConditionTexture;
+Texture gSecondConditionTexture;
 
 // Input text texture
-Texture gInputTextTexture;
+Texture gFirstInputTextTexture;
+Texture gSecondInputTextTexture;
 
 int main(int argc, char *argv[]) { // these two parameters are required for SDL
   // Start up SDL and create window
   if (!init()) {
 	std::cout << "Failed to initialize!" << std::endl;
+	return 1;
   } else {
 	// Load media
 	if (!loadMedia()) {
 	  std::cout << "Failed to load media!" << std::endl;
+	  return 1;
 	} else {
 
-	  // Initialize two arrays, one for the current state of the game and one for the next state
-	  std::array<std::array<int, GAME_HEIGHT>, GAME_WIDTH> display{};
-	  std::array<std::array<int, GAME_HEIGHT>, GAME_WIDTH> swap{};
-
 	  //Create random points
-	  for (auto &row : display)
-		std::generate(row.begin(), row.end(),
-					  []() { return (dist(rng)) % 8 == 0 ? 1 : 0; });
+	  generateRandomPixels(display);
 
 	  // Main loop flag
 	  bool quit = false;
@@ -116,9 +130,8 @@ int main(int argc, char *argv[]) { // these two parameters are required for SDL
 
 				// Pause the game
 			  case SDLK_p:
-				if (pause() == 1) {
+				if (pause() == 1)
 				  quit = true;
-				}
 				break;
 
 				// Speed up the game
@@ -216,14 +229,26 @@ bool loadMedia() {
 	success = false;
   } else {
 	// Open the font
-	gFont = TTF_OpenFont("resources/fonts/Arial Unicode.ttf", 28);
+	gFont = TTF_OpenFont("resources/fonts/Arial Unicode.ttf", 40);
 	if (gFont == nullptr) {
 	  std::cout << "Failed to load font! SDL_ttf Error: " << TTF_GetError() << std::endl;
 	  success = false;
 	} else {
-	  // Render text
+	  // Render setting header text
 	  SDL_Color textColor = {0, 0, 0, 0xFF};
-	  if (!gPromptTextTexture.loadFromRenderedText(gSettingWindow, "Setting", textColor)) {
+	  if (!gSettingHeaderTextTexture.loadFromRenderedText(gSettingWindow, "Setting", textColor)) {
+		std::cout << "Failed to render text texture!" << std::endl;
+		success = false;
+	  }
+
+	  // Render first condition text
+	  if (!gFirstConditionTexture.loadFromRenderedText(gSettingWindow, "   Less than     nears to die ", textColor)) {
+		std::cout << "Failed to render text texture!" << std::endl;
+		success = false;
+	  }
+
+	  // Render second condition text
+	  if (!gSecondConditionTexture.loadFromRenderedText(gSettingWindow, "   More than    nears to die ", textColor)) {
 		std::cout << "Failed to render text texture!" << std::endl;
 		success = false;
 	  }
@@ -231,6 +256,13 @@ bool loadMedia() {
   }
 
   return success;
+}
+
+void generateRandomPixels(std::array<std::array<int, GAME_HEIGHT>, GAME_WIDTH> &game) {
+  // Create random points
+  for (auto &row : game)
+	std::generate(row.begin(), row.end(),
+				  []() { return (dist(rng)) % 8 == 0 ? 1 : 0; });
 }
 
 int pause() {
@@ -275,7 +307,17 @@ int pause() {
 			break;
 
 			// Resume game
-		  case SDLK_r: pauseDone = true;
+		  case SDLK_r:
+			// Press ctrl + r to restart
+			if (SDL_GetModState() & KMOD_CTRL) {
+			  // Reset conditions
+			  LOWER_BOUND = 2;
+			  UPPER_BOUND = 3;
+			  UPDATE_RATE = 20;
+			  gWindow.setRefreshSpeed(UPDATE_RATE);
+			  generateRandomPixels(display);
+			}
+			pauseDone = true;
 			break;
 
 		  default: break;
@@ -284,7 +326,8 @@ int pause() {
 	}
 	// Clear and render pause window
 	gPauseWindow.clear();
-	gPauseTexture.render(gPauseWindow, 0, 0);
+	gPauseTexture.render(gPauseWindow, (gPauseWindow.getWidth() - gPauseTexture.getWidth()) / 2,
+						 (gPauseWindow.getHeight() - gPauseTexture.getHeight()) / 2);
 	gPauseWindow.render();
 
 	// Check all windows
@@ -312,14 +355,20 @@ int settings() {
   // Settings flag
   bool settingDone = false;
   int settingStatus = 0;
+  bool firstConditionEntered = false;
+  bool secondConditionEntered = false;
   SDL_Event e;
 
   // Set text color as black
   SDL_Color textColor = {0, 0, 0, 0xFF};
 
   // The current input text
-  std::string inputText = "Some Text";
-  gInputTextTexture.loadFromRenderedText(gSettingWindow, inputText, textColor);
+  std::string inputText;
+  std::string inputText1 = std::to_string(LOWER_BOUND);
+  std::string inputText2 = std::to_string(UPPER_BOUND);
+  inputText = inputText1;
+  gFirstInputTextTexture.loadFromRenderedText(gSettingWindow, inputText1, textColor);
+  gSecondInputTextTexture.loadFromRenderedText(gSettingWindow, inputText2, textColor);
 
   // Show setting window
   gSettingWindow.focus();
@@ -351,16 +400,26 @@ int settings() {
 			settingDone = true;
 			break;
 
-			// Return to pause menu
-		  case SDLK_r: settingDone = true;
-			break;
-
 			// Handle backspace
 		  case SDLK_BACKSPACE:
 			if (!inputText.empty()) {
 			  //lop off character
 			  inputText.pop_back();
 			  renderText = true;
+			}
+			break;
+
+			// Handle enter
+		  case SDLK_RETURN:
+			if (!inputText.empty()) {
+			  if (!firstConditionEntered) {
+				LOWER_BOUND = std::stoi(inputText);
+				firstConditionEntered = true;
+				inputText = inputText2;
+			  } else if (!secondConditionEntered) {
+				UPPER_BOUND = std::stoi(inputText);
+				secondConditionEntered = true;
+			  }
 			}
 			break;
 
@@ -387,15 +446,17 @@ int settings() {
 		}
 
 		// Special text input event
-
 	  } else if (e.type == SDL_TEXTINPUT) {
-		//Not copy or pasting
-		if (!(SDL_GetModState() & KMOD_CTRL &&
-			(e.text.text[0] == 'c' || e.text.text[0] == 'C' ||
-				e.text.text[0] == 'v' || e.text.text[0] == 'V'))) {
-		  //Append character
-		  inputText += e.text.text;
-		  renderText = true;
+		// Only single-digit numbers
+		if (inputText.empty()) {
+		  //Not copy or pasting
+		  if (!(SDL_GetModState() & KMOD_CTRL &&
+			  (e.text.text[0] == 'c' || e.text.text[0] == 'C' ||
+				  e.text.text[0] == 'v' || e.text.text[0] == 'V'))) {
+			//Append character
+			inputText += e.text.text;
+			renderText = true;
+		  }
 		}
 	  }
 	}
@@ -404,21 +465,45 @@ int settings() {
 	  //Text is not empty
 	  if (!inputText.empty()) {
 		//Render new text
-		gInputTextTexture.loadFromRenderedText(gSettingWindow, inputText, textColor);
-	  }
-		//Text is empty
-	  else {
+		if (!firstConditionEntered) {
+		  inputText1 = inputText;
+		}
+		gFirstInputTextTexture.loadFromRenderedText(gSettingWindow, inputText1, textColor);
+		gSecondInputTextTexture.loadFromRenderedText(gSettingWindow, inputText, textColor);
+	  } else {
 		//Render space texture
-		gInputTextTexture.loadFromRenderedText(gSettingWindow, " ", textColor);
+		if (!firstConditionEntered) {
+		  gFirstInputTextTexture.loadFromRenderedText(gSettingWindow, " ", textColor);
+		}
+		gSecondInputTextTexture.loadFromRenderedText(gSettingWindow, " ", textColor);
 	  }
 	}
 	// Clear and render setting window
 	gSettingWindow.clear();
-	gPromptTextTexture.render(gSettingWindow,
-							  (gSettingWindow.getWidth() - gPromptTextTexture.getWidth()) / 2, 0);
-	gInputTextTexture.render(gSettingWindow,
-							 (gSettingWindow.getWidth() - gInputTextTexture.getWidth()) / 2,
-							 (gSettingWindow.getHeight() + gPromptTextTexture.getHeight()) / 2);
+
+	// Always render Header
+	gSettingHeaderTextTexture.render(gSettingWindow,
+									 (gSettingWindow.getWidth() - gSettingHeaderTextTexture.getWidth()) / 2, 0);
+
+	// Render first condition if entered
+	gFirstConditionTexture.render(gSettingWindow,
+								  (gSettingWindow.getWidth() - gFirstConditionTexture.getWidth()) / 2,
+								  (gSettingWindow.getHeight() - gFirstConditionTexture.getHeight()) / 2 - 50);
+	gFirstInputTextTexture.render(gSettingWindow,
+								  (gSettingWindow.getWidth() - gFirstInputTextTexture.getWidth()) / 2,
+								  (gSettingWindow.getHeight() - gFirstInputTextTexture.getHeight()) / 2 - 50);
+
+	// Render second condition if entered
+	if (firstConditionEntered) {
+	  gSecondConditionTexture.render(gSettingWindow,
+									 (gSettingWindow.getWidth() - gSecondConditionTexture.getWidth()) / 2,
+									 (gSettingWindow.getHeight() - gSecondConditionTexture.getHeight()) / 2 + 50);
+	  gSecondInputTextTexture.render(gSettingWindow,
+									 (gSettingWindow.getWidth() - gSecondInputTextTexture.getWidth()) / 2,
+									 (gSettingWindow.getHeight() - gSettingHeaderTextTexture.getHeight()) / 2 + 50);
+	}
+
+	// Render setting window
 	gSettingWindow.render();
 
 	// Check all windows
@@ -430,6 +515,10 @@ int settings() {
 	// If all windows are closed, quit
 	if (allWindowsClosed) {
 	  settingStatus = 1;
+	  settingDone = true;
+	}
+
+	if (firstConditionEntered && secondConditionEntered) {
 	  settingDone = true;
 	}
   }
@@ -447,6 +536,7 @@ int settings() {
 void close() {
   // Free global font
   TTF_CloseFont(gFont);
+  gFont = nullptr;
 
   // Quit SDL subsystems
   TTF_Quit();
@@ -474,12 +564,12 @@ bool isAlive(std::array<std::array<int, GAME_HEIGHT>, GAME_WIDTH> &game, const i
   // testing bottom right
   if (y < GAME_HEIGHT && x < GAME_WIDTH && game[x + 1][y + 1] == 1) alive += 1;
 
-  // alive and fewer than 2 die
-  if (game[x][y] == 1 && alive < 2) return false;
+  // alive and fewer than LOWER_BOUND die
+  if (game[x][y] == 1 && alive < LOWER_BOUND) return false;
   // alive and 2 or 3 then live
   if (game[x][y] == 1 && (alive == 2 || alive == 3)) return true;
-  // more than 3 live die
-  if (alive > 3) return false;
+  // more than UPPER_BOUND live die
+  if (alive > UPPER_BOUND) return false;
   // 3 alive and point is dead, come to life
   if (game[x][y] == 0 && alive == 3) return true;
 

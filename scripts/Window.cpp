@@ -27,7 +27,7 @@ bool Window::init(int screenWidth, int screenHeight) {
   // Create window
   mWindow = SDL_CreateWindow(
 	  "Life Game", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-	  screenWidth, screenHeight, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
+	  screenWidth, screenHeight, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
   if (mWindow != nullptr) {
 	mMouseFocus = true;
 	mKeyboardFocus = true;
@@ -137,17 +137,6 @@ void Window::handleEvent(SDL_Event &e) {
 	// Update window caption with new data
 	if (updateCaption) {
 	  resetTitle();
-	}
-  }
-	// Enter exit full screen on return key
-  else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_RETURN) {
-	if (mFullScreen) {
-	  SDL_SetWindowFullscreen(mWindow, 0);
-	  mFullScreen = false;
-	} else {
-	  SDL_SetWindowFullscreen(mWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
-	  mFullScreen = true;
-	  mMinimized = false;
 	}
   }
 }

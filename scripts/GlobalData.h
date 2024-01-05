@@ -9,8 +9,10 @@
 const int GAME_WIDTH = 1280;
 const int GAME_HEIGHT = 720;
 
-// Initial update rate
+// Initial conditions
 extern int UPDATE_RATE;
+extern int LOWER_BOUND;
+extern int UPPER_BOUND;
 
 extern TTF_Font *gFont;
 

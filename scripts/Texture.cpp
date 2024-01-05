@@ -58,7 +58,7 @@ bool Texture::loadFromRenderedText(Window &window, const std::string &textureTex
 
   // Render text surface
   SDL_Surface *textSurface =
-	  TTF_RenderText_Solid(gFont, textureText.c_str(), textColor);
+	  TTF_RenderUTF8_Blended_Wrapped(gFont, textureText.c_str(), textColor, 500);
   if (textSurface != nullptr) {
 	// Create texture from surface pixels
 	mTexture = SDL_CreateTextureFromSurface(window.mRenderer, textSurface);
