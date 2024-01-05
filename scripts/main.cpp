@@ -467,9 +467,11 @@ int settings() {
 		//Render new text
 		if (!firstConditionEntered) {
 		  inputText1 = inputText;
+		} else {
+		  inputText2 = inputText;
 		}
 		gFirstInputTextTexture.loadFromRenderedText(gSettingWindow, inputText1, textColor);
-		gSecondInputTextTexture.loadFromRenderedText(gSettingWindow, inputText, textColor);
+		gSecondInputTextTexture.loadFromRenderedText(gSettingWindow, inputText2, textColor);
 	  } else {
 		//Render space texture
 		if (!firstConditionEntered) {
